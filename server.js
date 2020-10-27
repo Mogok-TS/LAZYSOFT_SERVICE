@@ -6,9 +6,6 @@ const app = express();
 var server = require('http').createServer(app);
 
 
-
-
-
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
