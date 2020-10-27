@@ -17,7 +17,7 @@ exports.login = (req, res) => {
             .then(data => {
                 //check email is exists or not
                 if (data.length > 0) {
-                    if(data[0].email=req.body.email){
+                    if(data[0].email==req.body.email){
                         //use bcrypt.compareSync() to compare with hashed password and request password
                         const passwordIsValid = bcrypt.compareSync(req.body.password, data[0].password);
                         if(passwordIsValid){
