@@ -1,10 +1,19 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const bcrypt=require("bcryptjs")//for hashing password
+const fileUpload = require('express-fileupload');//For parse request form-data
+const bcrypt=require("bcryptjs")//
 const app = express();
 
 var server = require('http').createServer(app);
 
+var date=new Date();
+
+
+// parse requests type of form-data
+
+app.use(fileUpload({
+    createParentPath: true
+}));
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -26,6 +35,9 @@ app.use(function(req, res, next) {
     next();
   });
 
+//create item model
+const itemsDB = require("./models/items-model");        
+itemsDB.sequelize.sync();
 
 //create account model
 const account=require("./models/account-model");
@@ -53,6 +65,8 @@ app.get('/',(req,res)=>{
     })
 })
 
+//make static file to public
+app.use(express.static(__dirname + '/static/'));
 
 function addNewAccount(){
     const hashedPassword=bcrypt.hashSync("administrator", 10);
@@ -80,6 +94,6 @@ function addNewAccount(){
    ).catch(err=>{
        return false;
    })
- 
+   //Adding in mobile_items table
 
 }
