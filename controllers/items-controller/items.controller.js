@@ -2,11 +2,12 @@ const model = require("../../models/items-model");
 const itemsDB = model.services;
 const jwt = require("jsonwebtoken"); //for JWT.io
 const secret = "S#2O2Opr0ductIT#Mm0duleAPIs"// secret key for token
-//give a image name
+var fs = require('fs');//for unlink(delete) old image in folder
 
 
 exports.addNew = (req, res) => {
   const token = req.headers['token'];
+  //check authorized is true or false
   if (authorization(token)) {
 
     //check param method type
@@ -30,7 +31,7 @@ exports.addNew = (req, res) => {
       //generate for image name
       var date = new Date();
       var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + ".png";
-      console.log(imageName)
+    
       //get image file from form-data
       let product_image = req.files.image;
       product_image.mv('./static/images/' + imageName);
@@ -49,12 +50,11 @@ exports.addNew = (req, res) => {
         warehouse: req.body.warehouse,
         description: req.body.description
       }
-      console.log(bodyData.itemID);
       //Adding in mobile_items table
       itemsDB.create(bodyData).then(
         response => {
           res.send({
-           
+            data: response,
             status: true,
             message: "Added successfully.",
           });
@@ -77,6 +77,92 @@ exports.addNew = (req, res) => {
   }
 };
 
+exports.update = (req, res) => {
+  const token = req.headers['token'];
+
+  //check authorized is true or false
+  if (authorization(token)) {
+  var method = req.body.type;
+
+  if (method == "update" || method == "Update" || method == "UPDATE") {
+    if (req.body.name == "" || req.body.stock_balance == "" || req.body.price == "" || req.body.warehouse == "" || req.body.description == "") {
+      res.status(500).send({
+        message: "Fields cannot be empty.Check params."
+      });
+    }
+    //check image files
+    if (!req.files) {
+      var body = {
+        name: req.body.name,
+        stock_balance: req.body.stock_balance,
+        price: req.body.price,
+        warehouse: req.body.warehouse,
+        description: req.body.description
+      }
+    }else{
+      //image folder path
+      var filePath='./static/images/'
+      //if user change image , need to delete old image
+      var oldImageName=req.body.imageName;
+      fs.unlinkSync(filePath+oldImageName);
+    
+    //set image name
+    var date = new Date();
+    var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + ".png";
+    
+
+    //get image file from form-data
+    let product_image = req.files.image;
+    product_image.mv('./static/images/' + imageName);
+
+
+
+    //getting request data
+    var body = {
+      name: req.body.name,
+      image_name:imageName,
+      image_path: "/images/" + imageName,
+      stock_balance: req.body.stock_balance,
+      price: req.body.price,
+      warehouse: req.body.warehouse,
+      description: req.body.description
+    }
+
+  }
+  //get product item id from
+  const id = req.body.itemID;
+    itemsDB.update(body, {
+      where: { itemID: id }
+    })
+      .then(num => {
+        if (num == 1) {
+          res.send({
+            message: "Item was updated successfully."
+          });
+        } else {
+          res.send({
+            message: `Cannot update item with id=${id}. Maybe item was not found or params is empty!`
+          });
+        }
+      })
+      .catch(err => {
+        res.status(500).send({
+          message: "Error updating item with id=" + id
+        });
+      });
+  } else {
+    res.status(200).send({
+      message: "Wrong method."
+    });
+  }
+} else {
+  res.status(401).send({
+    status: false,
+    message: "Unauthorized"
+  })
+}
+};
+
 //for verify token
 function authorization(token) {
   //check token is vaild or invaild
@@ -90,7 +176,7 @@ function authorization(token) {
       return true;
     }
   });
-//check jwt decode is fail or success
+//check jwt is fail or success...
   if (verify) {
     return true;
   } else {
