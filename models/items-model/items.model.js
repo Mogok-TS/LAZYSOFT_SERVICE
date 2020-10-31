@@ -7,6 +7,7 @@ module.exports=(sequelize,Sequelize)=>{
         },
         itemID:{
             type: Sequelize.INTEGER(45),
+            primaryKey: true
         },
         name:{
             type:Sequelize.STRING

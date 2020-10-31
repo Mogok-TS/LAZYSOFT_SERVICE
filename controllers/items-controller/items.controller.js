@@ -31,7 +31,7 @@ exports.addNew = (req, res) => {
       //generate for image name
       var date = new Date();
       var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + ".png";
-    
+
       //get image file from form-data
       let product_image = req.files.image;
       product_image.mv('./static/images/' + imageName);
@@ -54,7 +54,6 @@ exports.addNew = (req, res) => {
       itemsDB.create(bodyData).then(
         response => {
           res.send({
-            data: response,
             status: true,
             message: "Added successfully.",
           });
@@ -77,91 +76,219 @@ exports.addNew = (req, res) => {
   }
 };
 
+exports.getAll = (req, res) => {
+  const token = req.headers['token'];
+
+  //check authorized is true or false
+  if (authorization(token)) {
+    var method = req.body.type;
+    if (method == "get" || method == "Get" || method == "GET") {
+      itemsDB.findAll()
+        .then(data => {
+          res.send(data);
+        })
+        .catch(err => {
+          res.status(500).send({
+            message:
+              err.message || "Some error occurred while retrieving items."
+          });
+        });
+    } else {
+      res.status(200).send({
+        message: "Wrong method."
+      });
+    }
+  } else {
+    res.status(401).send({
+      status: false,
+      message: "Unauthorized"
+    })
+  }
+};
+
+
+
+exports.get = (req, res) => {
+  const token = req.headers['token'];
+
+  //check authorized is true or false
+  if (authorization(token)) {
+    var method = req.body.type;
+
+    if (method == "get" || method == "Get" || method == "GET") {
+      const itemID = req.body.itemID;
+      itemsDB.findOne({ wheer: { itemID: itemID } })
+        .then(data => {
+          res.send(data);
+        })
+        .catch(err => {
+          res.status(500).send({
+            message:
+              err.message || "Some error occurred while retrieving items."
+          });
+        });
+    } else {
+      res.status(200).send({
+        message: "Wrong method."
+      });
+    }
+  } else {
+    res.status(401).send({
+      status: false,
+      message: "Unauthorized"
+    })
+  }
+};
 exports.update = (req, res) => {
   const token = req.headers['token'];
 
   //check authorized is true or false
   if (authorization(token)) {
-  var method = req.body.type;
+    var method = req.body.type;
 
-  if (method == "update" || method == "Update" || method == "UPDATE") {
-    if (req.body.name == "" || req.body.stock_balance == "" || req.body.price == "" || req.body.warehouse == "" || req.body.description == "") {
-      res.status(500).send({
-        message: "Fields cannot be empty.Check params."
-      });
-    }
-    //check image files
-    if (!req.files) {
-      var body = {
-        name: req.body.name,
-        stock_balance: req.body.stock_balance,
-        price: req.body.price,
-        warehouse: req.body.warehouse,
-        description: req.body.description
-      }
-    }else{
-      //image folder path
-      var filePath='./static/images/'
-      //if user change image , need to delete old image
-      var oldImageName=req.body.imageName;
-      fs.unlinkSync(filePath+oldImageName);
-    
-    //set image name
-    var date = new Date();
-    var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + ".png";
-    
-
-    //get image file from form-data
-    let product_image = req.files.image;
-    product_image.mv('./static/images/' + imageName);
-
-
-
-    //getting request data
-    var body = {
-      name: req.body.name,
-      image_name:imageName,
-      image_path: "/images/" + imageName,
-      stock_balance: req.body.stock_balance,
-      price: req.body.price,
-      warehouse: req.body.warehouse,
-      description: req.body.description
-    }
-
-  }
-  //get product item id from
-  const id = req.body.itemID;
-    itemsDB.update(body, {
-      where: { itemID: id }
-    })
-      .then(num => {
-        if (num == 1) {
-          res.send({
-            message: "Item was updated successfully."
-          });
-        } else {
-          res.send({
-            message: `Cannot update item with id=${id}. Maybe item was not found or params is empty!`
-          });
-        }
-      })
-      .catch(err => {
+    if (method == "update" || method == "Update" || method == "UPDATE") {
+      if (req.body.name == "" || req.body.stock_balance == "" || req.body.price == "" || req.body.warehouse == "" || req.body.description == "") {
         res.status(500).send({
-          message: "Error updating item with id=" + id
+          message: "Fields cannot be empty.Check params."
         });
+      }
+      //check image files
+      if (!req.files) {
+        var body = {
+          name: req.body.name,
+          stock_balance: req.body.stock_balance,
+          price: req.body.price,
+          warehouse: req.body.warehouse,
+          description: req.body.description
+        }
+      } else {
+        //image folder path
+        var filePath = './static/images/'
+        //if user change image , need to delete old image
+        var oldImageName = req.body.imageName;
+        fs.unlinkSync(filePath + oldImageName);
+
+        //set image name
+        var date = new Date();
+        var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + ".png";
+
+
+        //get image file from form-data
+        let product_image = req.files.image;
+        product_image.mv('./static/images/' + imageName);
+
+
+
+        //getting request data
+        var body = {
+          name: req.body.name,
+          image_name: imageName,
+          image_path: "/images/" + imageName,
+          stock_balance: req.body.stock_balance,
+          price: req.body.price,
+          warehouse: req.body.warehouse,
+          description: req.body.description
+        }
+
+      }
+      //get product item id from
+      const id = req.body.itemID;
+      itemsDB.update(body, {
+        where: { itemID: id }
+      })
+        .then(num => {
+          if (num == 1) {
+            res.send({
+              message: "Item was updated successfully."
+            });
+          } else {
+            res.send({
+              message: `Cannot update item with id=${id}. Maybe item was not found or params is empty!`
+            });
+          }
+        })
+        .catch(err => {
+          res.status(500).send({
+            message: "Error updating item with id=" + id
+          });
+        });
+    } else {
+      res.status(200).send({
+        message: "Wrong method."
       });
+    }
   } else {
-    res.status(200).send({
-      message: "Wrong method."
-    });
+    res.status(401).send({
+      status: false,
+      message: "Unauthorized"
+    })
   }
-} else {
-  res.status(401).send({
-    status: false,
-    message: "Unauthorized"
-  })
-}
 };
+
+exports.delete = (req, res) => {
+  const token = req.headers['token'];
+
+  //check authorized is true or false
+  if (authorization(token)) {
+    var method = req.body.type;
+
+    if (method == "delete" || method == "Delete" || method == "DELETE") {
+      //get image Name for delete
+      itemsDB.findOne({ where: { itemID: req.body.itemID } })
+        .then(data => {
+
+          //delete data in the database
+          itemsDB.destroy({
+            where: { itemID: req.body.itemID }
+          })
+            .then(num => {
+              //if deleted successfully in database 
+              if (num == 1) {
+                //image folder path
+                var filePath = './static/images/'
+                //if user change image , need to delete old image
+                var oldImageName = data.image_name;
+                fs.unlinkSync(filePath + oldImageName);
+                res.send({
+                  message: "Item was deleted successfully!"
+                });
+              } else {
+                res.send({
+                  message: `Cannot delete item with id=${id}. Maybe item was not found!`
+                });
+              }
+            })
+            .catch(err => {
+              res.status(500).send({
+                message: "Could not delete item with id=" + id
+              });
+            });
+
+
+        })
+        .catch(err => {
+          res.status(500).send({
+            message:
+              err.message || "Some error occurred while retrieving items."
+          });
+        });
+
+
+    } else {
+      res.status(200).send({
+        message: "Wrong method."
+      });
+    }
+
+  } else {
+    res.status(401).send({
+      status: false,
+      message: "Unauthorized"
+    })
+  }
+};
+
+
 
 //for verify token
 function authorization(token) {
@@ -176,7 +303,7 @@ function authorization(token) {
       return true;
     }
   });
-//check jwt is fail or success...
+  //check jwt is fail or success...
   if (verify) {
     return true;
   } else {
