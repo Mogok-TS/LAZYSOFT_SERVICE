@@ -2,14 +2,13 @@ const model = require("../../models/account-model");
 const jwt=require("jsonwebtoken");
 const bcrypt=require("bcryptjs");
 const account = model.services;
-const Op = model.Sequelize.Op;
 const secret="S#2O2Opr0ductIT#Mm0duleAPIs"
 
 
 exports.login = (req, res) => {
     var method = req.body.type;
     if (method == "post" || method == "Post" || method == "POST") {
-        account.findAll({
+        account.findOne({
             where: {
                 email: req.body.email
             }
@@ -55,4 +54,4 @@ exports.login = (req, res) => {
             message: "Wrong method."
         });
     }
-}
+};

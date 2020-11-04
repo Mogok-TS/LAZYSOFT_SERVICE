@@ -117,7 +117,7 @@ exports.get = (req, res) => {
 
     if (method == "get" || method == "Get" || method == "GET") {
       const itemID = req.body.itemID;
-      itemsDB.findOne({ wheer: { itemID: itemID } })
+      itemsDB.findOne({ where: { itemID: itemID } })
         .then(data => {
           res.send(data);
         })

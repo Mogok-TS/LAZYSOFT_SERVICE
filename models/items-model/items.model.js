@@ -19,7 +19,7 @@ module.exports=(sequelize,Sequelize)=>{
             type:Sequelize.STRING
         },
         stock_balance:{
-            type:Sequelize.STRING
+            type:Sequelize.INTEGER(45)
         },
         price:{
             type:Sequelize.INTEGER(45)

@@ -3,6 +3,12 @@ const bodyParser = require("body-parser");
 const fileUpload = require('express-fileupload');//For parse request form-data
 const bcrypt=require("bcryptjs")//
 const app = express();
+const cors = require("cors");//CORS option for running in local
+
+
+var corsOptions = {
+  origin: 'http://localhost:4200',
+ }
 
 var server = require('http').createServer(app);
 
@@ -14,6 +20,9 @@ var date=new Date();
 app.use(fileUpload({
     createParentPath: true
 }));
+
+app.use(cors(corsOptions));
+
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
