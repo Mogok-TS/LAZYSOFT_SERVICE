@@ -50,19 +50,40 @@ exports.addNew = (req, res) => {
         warehouse: req.body.warehouse,
         description: req.body.description
       }
-      //Adding in mobile_items table
-      itemsDB.create(bodyData).then(
-        response => {
-          res.send({
-            status: true,
-            message: "Added successfully.",
-          });
+      //not allow when product name is already have in database
+      itemsDB.findOne({
+        where: {
+          name: req.body.name
+        }
+      }).then(
+        res => {
+          if (res.length > 0) {
+            res.status(200).send({
+              status: false,
+              message: "Product name is already exists."
+            });
+          } else {
+            //Adding in mobile_items table
+            itemsDB.create(bodyData).then(
+              response => {
+                res.send({
+                  status: true,
+                  message: "Added successfully.",
+                });
 
-        }).catch(err => {
-          res.status(500).send({
-            message: err.message || "Some error occured while saving new item."
-          });
+              }).catch(err => {
+                res.status(500).send({
+                  message: err.message || "Some error occured while saving new item."
+                });
+              });
+          }
+        }
+      ).catch(err => {
+        res.status(500).send({
+          message: err.message || "Some error occured while checking name."
         });
+      });
+
     } else {
       res.status(200).send({
         message: "Wrong method."

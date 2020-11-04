@@ -30,7 +30,7 @@ exports.login = (req, res) => {
                                 token:token
                             })
                         }else{
-                            res.status(500).send({
+                            res.status(404).send({
                                 status:false,
                                 message:"Wrong password"
                             })
@@ -46,7 +46,7 @@ exports.login = (req, res) => {
             .catch(err => {
                 res.status(500).send({
                     message:
-                        err.message || "Some error occurred while retrieving items."
+                        err.message || "Some error occurred while logging in."
                 });
             });
     } else {
