@@ -8,12 +8,13 @@ const secret="S#2O2Opr0ductIT#Mm0duleAPIs"
 exports.login = (req, res) => {
     var method = req.body.type;
     if (method == "post" || method == "Post" || method == "POST") {
-        account.findOne({
+        account.findAll({
             where: {
                 email: req.body.email
             }
         })
             .then(data => {
+                
                 //check email is exists or not
                 if (data.length > 0) {
                     if(data[0].email==req.body.email){
