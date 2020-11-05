@@ -175,19 +175,6 @@ exports.update = (req, res) => {
           message: "Fields cannot be empty.Check params."
         });
       }
-      //check product is exists or not
-      itemsDB.findAll({
-        where: {
-          name: req.body.name
-        }
-      }).then(
-        response => {
-          if (response.length > 0) {
-            res.status(200).send({
-              status: false,
-              message: "Product name is already exists."
-            });
-          } else {
             //check image files
             if (!req.files) {
               var body = {
@@ -249,13 +236,7 @@ exports.update = (req, res) => {
                 });
               });
 
-          }
-        }).catch(err => {
-          res.status(500).send({
-            message: err
-          });
-        });
-
+          
     } else {
       res.status(200).send({
         message: "Wrong method."
