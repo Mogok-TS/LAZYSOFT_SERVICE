@@ -50,19 +50,20 @@ exports.addNew = (req, res) => {
         warehouse: req.body.warehouse,
         description: req.body.description
       }
-      //not allow when product name is already have in database
-      itemsDB.findAll({
-        where: {
-          name: req.body.name
-        }
-      }).then(
-        response => {
-          if (response.length > 0) {
-            res.status(200).send({
-              status: false,
-              message: "Product name is already exists."
-            });
-          } else {
+            //not allow when product name is already have in database
+            itemsDB.findAll({
+              where: {
+                name: req.body.name,
+                warehouse:req.body.warehouse
+              }
+            }).then(
+              response => {
+                if (response.length > 0 ) {
+                  res.status(403).send({
+                    status: false,
+                    message: "Product name is already exists in this warehouse."
+                  });
+                } else {
             //Adding in mobile_items table
             itemsDB.create(bodyData).then(
               response => {
@@ -184,7 +185,7 @@ exports.update = (req, res) => {
             }).then(
               response => {
                 if (response.length > 0 && req.body.status=="2") {
-                  res.status(200).send({
+                  res.status(403).send({
                     status: false,
                     message: "Product name is already exists in this warehouse."
                   });
