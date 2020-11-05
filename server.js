@@ -6,6 +6,7 @@ const app = express();
 const cors = require("cors");//CORS option for running in local
 
 
+
 var corsOptions = {
   origin: 'http://localhost:4200',
  }

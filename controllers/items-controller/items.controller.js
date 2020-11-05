@@ -175,6 +175,20 @@ exports.update = (req, res) => {
           message: "Fields cannot be empty.Check params."
         });
       }
+            //not allow when product name is already have in database
+            itemsDB.findAll({
+              where: {
+                name: req.body.name,
+                warehouse:req.body.warehouse
+              }
+            }).then(
+              response => {
+                if (response.length > 0 && req.body.status=="2") {
+                  res.status(200).send({
+                    status: false,
+                    message: "Product name is already exists in this warehouse."
+                  });
+                } else {
             //check image files
             if (!req.files) {
               var body = {
@@ -200,8 +214,6 @@ exports.update = (req, res) => {
               let product_image = req.files.image;
               product_image.mv('./static/images/' + imageName);
 
-
-
               //getting request data
               var body = {
                 name: req.body.name,
@@ -222,6 +234,7 @@ exports.update = (req, res) => {
               .then(num => {
                 if (num == 1) {
                   res.send({
+                    status:true,
                     message: "Item was updated successfully."
                   });
                 } else {
@@ -235,6 +248,13 @@ exports.update = (req, res) => {
                   message: "Error updating item with id=" + id
                 });
               });
+              }
+            }).catch(err => {
+              res.status(500).send({
+                message: err.message || "Some error occured while checking name."
+              });
+            });
+
 
           
     } else {
@@ -259,7 +279,7 @@ exports.delete = (req, res) => {
 
     if (method == "delete" || method == "Delete" || method == "DELETE") {
       //get image Name for delete
-      itemsDB.findOne({ where: { itemID: req.body.itemID } })
+      itemsDB.findAll({ where: { itemID: req.body.itemID } })
         .then(data => {
 
           //delete data in the database
@@ -272,9 +292,10 @@ exports.delete = (req, res) => {
                 //image folder path
                 var filePath = './static/images/'
                 //if user change image , need to delete old image
-                var oldImageName = data.image_name;
+                var oldImageName = data[0].image_name;
                 fs.unlinkSync(filePath + oldImageName);
                 res.send({
+                  status:true,
                   message: "Item was deleted successfully!"
                 });
               } else {
