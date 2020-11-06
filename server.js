@@ -3,7 +3,6 @@ const bodyParser = require("body-parser");
 const fileUpload = require('express-fileupload');//For parse request form-data
 const bcrypt=require("bcryptjs")//
 const app = express();
-const cors = require("cors");//CORS option for running in local
 
 
 
