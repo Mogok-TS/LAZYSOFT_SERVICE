@@ -7,9 +7,7 @@ const cors = require("cors");//CORS option for running in local
 
 
 
-var corsOptions = {
-  origin: 'http://localhost:4200',
- }
+
 
 var server = require('http').createServer(app);
 
@@ -22,7 +20,6 @@ app.use(fileUpload({
     createParentPath: true
 }));
 
-app.use(cors(corsOptions));
 
 
 // parse requests of content-type - application/x-www-form-urlencoded
