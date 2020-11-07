@@ -3,14 +3,17 @@ const bodyParser = require("body-parser");
 const fileUpload = require('express-fileupload');//For parse request form-data
 const bcrypt=require("bcryptjs")//
 const app = express();
+const cors = require("cors");
+
+var server = require('http').createServer(app);
 
 
+var corsOptions = {
+   origin: '*',
+ }
 
+ app.use(cors(corsOptions));
 
-
-var server = require('https').createServer(app);
-
-var date=new Date();
 
 
 // parse requests type of form-data
