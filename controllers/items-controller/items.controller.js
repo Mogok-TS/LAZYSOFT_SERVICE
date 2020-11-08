@@ -9,9 +9,8 @@ const Cryptr = require('cryptr');
 const cryptr = new Cryptr(key);
 
 
-
+//ADDNEW function
 exports.addNew = (req, res) => {
-  console.log(req.body.name)
   const token = req.headers['token'];
   //check authorized is true or false
   if (authorization(token)) {
@@ -34,38 +33,37 @@ exports.addNew = (req, res) => {
         });
         return;
       }
-     
+
       //get image file from form-data
       let product_image = req.files.image;
-      console.log(product_image)
 
-      if(product_image.mimetype!="image/png" && product_image.mimetype!="image/jpeg" && product_image.mimetype!="image/jpg"){
+      if (product_image.mimetype != "image/png" && product_image.mimetype != "image/jpeg" && product_image.mimetype != "image/jpg") {
         res.status(415).send({
           message: "File type are not allowed."
         });
         return;
       }
- //generate for image name
- var date = new Date();
- var imageType='';
+      //generate for image name
+      var date = new Date();
+      var imageType = '';
 
- switch(product_image.mimetype){
-   case 'image/png':
-     imageType='.png'
-     break;
-   case 'image/jpeg':
-     imageType='.jpg'
-     break;
-  case 'image/jpg':
-    imageType='.jpg'
-    break;
-  default:
-    imageType=".png"
-    break;
- }
- var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + imageType;
-//for encrypt description
-const encryptDes = cryptr.encrypt(req.body.description)
+      switch (product_image.mimetype) {
+        case 'image/png':
+          imageType = '.png'
+          break;
+        case 'image/jpeg':
+          imageType = '.jpg'
+          break;
+        case 'image/jpg':
+          imageType = '.jpg'
+          break;
+        default:
+          imageType = ".png"
+          break;
+      }
+      var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + imageType;
+      //for encrypt description
+      const encryptDes = cryptr.encrypt(req.body.description)
 
 
       //getting request data
@@ -81,21 +79,21 @@ const encryptDes = cryptr.encrypt(req.body.description)
         warehouse: req.body.warehouse,
         description: encryptDes
       }
-      
-            //not allow when product name is already have in database
-            itemsDB.findAll({
-              where: {
-                name: req.body.name,
-                warehouse:req.body.warehouse
-              }
-            }).then(
-              response => {
-                if (response.length > 0 ) {
-                  res.status(403).send({
-                    status: false,
-                    message: "Product name is already exists in this warehouse."
-                  });
-                } else {
+
+      //not allow when product name is already have in database
+      itemsDB.findAll({
+        where: {
+          name: req.body.name,
+          warehouse: req.body.warehouse
+        }
+      }).then(
+        response => {
+          if (response.length > 0) {
+            res.status(403).send({
+              status: false,
+              message: "Product name is already exists in this warehouse."
+            });
+          } else {
             //Adding in mobile_items table
             itemsDB.create(bodyData).then(
               response => {
@@ -142,8 +140,8 @@ exports.getAll = (req, res) => {
       itemsDB.findAll()
         .then(data => {
           //for decrypt description
-          for(var i=0;i<data.length;i++){
-            data[i].description=cryptr.decrypt(data[i].description)
+          for (var i = 0; i < data.length; i++) {
+            data[i].description = cryptr.decrypt(data[i].description)
 
           }
           res.send(data);
@@ -168,7 +166,7 @@ exports.getAll = (req, res) => {
 };
 
 
-
+//GETONE function
 exports.get = (req, res) => {
   const token = req.headers['token'];
 
@@ -179,16 +177,15 @@ exports.get = (req, res) => {
     if (method == "get" || method == "Get" || method == "GET") {
       const itemID = req.body.itemID;
 
-      if(itemID==null || itemID==undefined || itemID=="" || itemID==" "){
+      if (itemID == null || itemID == undefined || itemID == "" || itemID == " ") {
         res.status(500).send({
           message: "Fields cannot be empty.Check params."
         });
       }
-      itemsDB.findAll({ where: { itemID: itemID } })
+      itemsDB.findOne({ where: { itemID: itemID } })
         .then(data => {
-          console.log(data[0])
 
-          data[0].description= cryptr.decrypt(data[0].description);
+          data.description = cryptr.decrypt(data.description);
 
           res.send(data);
         })
@@ -210,6 +207,8 @@ exports.get = (req, res) => {
     })
   }
 };
+
+//UPDATE Function
 exports.update = (req, res) => {
   const token = req.headers['token'];
 
@@ -223,69 +222,73 @@ exports.update = (req, res) => {
           message: "Fields cannot be empty.Check params."
         });
       }
-            //not allow when product name is already have in database
-            itemsDB.findAll({
-              where: {
-                name: req.body.name,
-                warehouse:req.body.warehouse
-              }
-            }).then(
-              response => {
-                if (response.length > 0 && req.body.status=="2") {
-                  res.status(403).send({
-                    status: false,
-                    message: "Product name is already exists in this warehouse."
-                  });
-                } else {
-            //check image files
+      //for encrypt description
+      const encryptDesc = cryptr.encrypt(req.body.description).toString();
+
+      //not allow when product name is already have in database
+      itemsDB.findAll({
+        where: {
+          name: req.body.name,
+          warehouse: req.body.warehouse
+        }
+      }).then(
+        response => {
+          if (response.length > 0 && req.body.status == "2") {
+            res.status(403).send({
+              status: false,
+              message: "Product name is already exists in this warehouse."
+            });
+          } else {
+
+            //check image files ,no file no image update
             if (!req.files) {
               var body = {
                 name: req.body.name,
                 stock_balance: req.body.stock_balance,
                 price: req.body.price,
                 warehouse: req.body.warehouse,
-                description: cryptr.encrypt(req.body.description)
+                description: encryptDesc
               }
+
+
             } else {
               //image folder path
               var filePath = './static/images/'
-              //if user change image , need to delete old image
 
 
-                 //get image file from form-data
-      let product_image_update = req.files.image;
+              //get image file from form-data
+              let product_image_update = req.files.image;
+              //check type
+              if (product_image_update.mimetype != "image/png" && product_image_update.mimetype != "image/jpeg" && product_image_update.mimetype != "image/jpg") {
+                res.status(415).send({
+                  message: "File type are not allowed."
+                });
+                return;
+              }
+              //generate for image name
+              var date = new Date();
+              var imageType = '';
 
-      if(product_image_update.mimetype!="image/png" && product_image_update.mimetype!="image/jpeg" && product_image_update.mimetype!="image/jpg"){
-        res.status(415).send({
-          message: "File type are not allowed."
-        });
-        return;
-      }
- //generate for image name
- var date = new Date();
- var imageType='';
+              switch (product_image_update.mimetype) {
+                case 'image/png':
+                  imageType = '.png'
+                  break;
+                case 'image/jpeg':
+                  imageType = '.jpg'
+                  break;
+                case 'image/jpg':
+                  imageType = '.jpg'
+                  break;
+                default:
+                  imageType = ".png"
+                  break;
+              }
+              var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + imageType;
 
- switch(product_image_update.mimetype){
-   case 'image/png':
-     imageType='.png'
-     break;
-   case 'image/jpeg':
-     imageType='.jpg'
-     break;
-  case 'image/jpg':
-    imageType='.jpg'
-    break;
-  default:
-    imageType=".png"
-    break;
- }
- var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + imageType;
-//for encrypt description
-const encryptDes = cryptr.encrypt(req.body.description)
               //get image file from form-data
               let product_image = req.files.image;
               product_image.mv('./static/images/' + imageName);
-              
+
               //get old image name for delete in folder
               var oldImageName = req.body.imageName;
 
@@ -297,8 +300,9 @@ const encryptDes = cryptr.encrypt(req.body.description)
                 stock_balance: req.body.stock_balance,
                 price: req.body.price,
                 warehouse: req.body.warehouse,
-                description: encryptDes
+                description: encryptDesc
               }
+              fs.unlinkSync(filePath + oldImageName);
 
             }
             //get product item id from
@@ -308,9 +312,8 @@ const encryptDes = cryptr.encrypt(req.body.description)
             })
               .then(num => {
                 if (num == 1) {
-                  fs.unlinkSync(filePath + oldImageName);
                   res.send({
-                    status:true,
+                    status: true,
                     message: "Item was updated successfully."
                   });
                 } else {
@@ -324,15 +327,15 @@ const encryptDes = cryptr.encrypt(req.body.description)
                   message: "Error updating item with id=" + id
                 });
               });
-              }
-            }).catch(err => {
-              res.status(500).send({
-                message: err.message || "Some error occured while checking name."
-              });
-            });
+          }
+        }).catch(err => {
+          res.status(500).send({
+            message: err.message || "Some error occured while checking name."
+          });
+        });
 
 
-          
+
     } else {
       res.status(200).send({
         message: "Wrong method."
@@ -346,6 +349,7 @@ const encryptDes = cryptr.encrypt(req.body.description)
   }
 };
 
+//DELETE Function
 exports.delete = (req, res) => {
   const token = req.headers['token'];
 
@@ -371,7 +375,7 @@ exports.delete = (req, res) => {
                 var oldImageName = data[0].image_name;
                 fs.unlinkSync(filePath + oldImageName);
                 res.send({
-                  status:true,
+                  status: true,
                   message: "Item was deleted successfully!"
                 });
               } else {
@@ -433,19 +437,3 @@ function authorization(token) {
   }
 }
 
-//encrypt function
-function encrypt(text) {
-  //create cipher text
-  let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
-  //encrypt cipher text
-  let encrypted = cipher.update(text);
-  encrypted = Buffer.concat([encrypted, cipher.final()]);
-  return encrypted.toString('hex');
- }
- 
- //decrypt function
- function decrypt(buffer){
-  var decipher = crypto.createDecipher('aes-256-cbc',Buffer.from(key),iv)
-  var dec = Buffer.concat([decipher.update(buffer) , decipher.final()]);
-  return dec;
-}
