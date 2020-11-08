@@ -3,9 +3,15 @@ const itemsDB = model.services;
 const jwt = require("jsonwebtoken"); //for JWT.io
 const secret = "S#2O2Opr0ductIT#Mm0duleAPIs"// secret key for token
 var fs = require('fs');//for unlink(delete) old image in folder
+//for encrypt description
+const key = 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3';
+const Cryptr = require('cryptr');
+const cryptr = new Cryptr(key);
+
 
 
 exports.addNew = (req, res) => {
+  console.log(req.body.name)
   const token = req.headers['token'];
   //check authorized is true or false
   if (authorization(token)) {
@@ -28,13 +34,38 @@ exports.addNew = (req, res) => {
         });
         return;
       }
-      //generate for image name
-      var date = new Date();
-      var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + ".png";
-
+     
       //get image file from form-data
       let product_image = req.files.image;
+      console.log(product_image)
 
+      if(product_image.mimetype!="image/png" && product_image.mimetype!="image/jpeg" && product_image.mimetype!="image/jpg"){
+        res.status(415).send({
+          message: "File type are not allowed."
+        });
+        return;
+      }
+ //generate for image name
+ var date = new Date();
+ var imageType='';
+
+ switch(product_image.mimetype){
+   case 'image/png':
+     imageType='.png'
+     break;
+   case 'image/jpeg':
+     imageType='.jpg'
+     break;
+  case 'image/jpg':
+    imageType='.jpg'
+    break;
+  default:
+    imageType=".png"
+    break;
+ }
+ var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + imageType;
+//for encrypt description
+const encryptDes = cryptr.encrypt(req.body.description)
 
 
       //getting request data
@@ -48,8 +79,9 @@ exports.addNew = (req, res) => {
         stock_balance: req.body.stock_balance,
         price: req.body.price,
         warehouse: req.body.warehouse,
-        description: req.body.description
+        description: encryptDes
       }
+      
             //not allow when product name is already have in database
             itemsDB.findAll({
               where: {
@@ -109,6 +141,11 @@ exports.getAll = (req, res) => {
     if (method == "get" || method == "Get" || method == "GET") {
       itemsDB.findAll()
         .then(data => {
+          //for decrypt description
+          for(var i=0;i<data.length;i++){
+            data[i].description=cryptr.decrypt(data[i].description)
+
+          }
           res.send(data);
         })
         .catch(err => {
@@ -141,8 +178,18 @@ exports.get = (req, res) => {
 
     if (method == "get" || method == "Get" || method == "GET") {
       const itemID = req.body.itemID;
-      itemsDB.findOne({ where: { itemID: itemID } })
+
+      if(itemID==null || itemID==undefined || itemID=="" || itemID==" "){
+        res.status(500).send({
+          message: "Fields cannot be empty.Check params."
+        });
+      }
+      itemsDB.findAll({ where: { itemID: itemID } })
         .then(data => {
+          console.log(data[0])
+
+          data[0].description= cryptr.decrypt(data[0].description);
+
           res.send(data);
         })
         .catch(err => {
@@ -197,23 +244,50 @@ exports.update = (req, res) => {
                 stock_balance: req.body.stock_balance,
                 price: req.body.price,
                 warehouse: req.body.warehouse,
-                description: req.body.description
+                description: cryptr.encrypt(req.body.description)
               }
             } else {
               //image folder path
               var filePath = './static/images/'
               //if user change image , need to delete old image
-              var oldImageName = req.body.imageName;
-              fs.unlinkSync(filePath + oldImageName);
-
-              //set image name
-              var date = new Date();
-              var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + ".png";
 
 
+                 //get image file from form-data
+      let product_image_update = req.files.image;
+
+      if(product_image_update.mimetype!="image/png" && product_image_update.mimetype!="image/jpeg" && product_image_update.mimetype!="image/jpg"){
+        res.status(415).send({
+          message: "File type are not allowed."
+        });
+        return;
+      }
+ //generate for image name
+ var date = new Date();
+ var imageType='';
+
+ switch(product_image_update.mimetype){
+   case 'image/png':
+     imageType='.png'
+     break;
+   case 'image/jpeg':
+     imageType='.jpg'
+     break;
+  case 'image/jpg':
+    imageType='.jpg'
+    break;
+  default:
+    imageType=".png"
+    break;
+ }
+ var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + imageType;
+//for encrypt description
+const encryptDes = cryptr.encrypt(req.body.description)
               //get image file from form-data
               let product_image = req.files.image;
               product_image.mv('./static/images/' + imageName);
+              
+              //get old image name for delete in folder
+              var oldImageName = req.body.imageName;
 
               //getting request data
               var body = {
@@ -223,7 +297,7 @@ exports.update = (req, res) => {
                 stock_balance: req.body.stock_balance,
                 price: req.body.price,
                 warehouse: req.body.warehouse,
-                description: req.body.description
+                description: encryptDes
               }
 
             }
@@ -234,6 +308,7 @@ exports.update = (req, res) => {
             })
               .then(num => {
                 if (num == 1) {
+                  fs.unlinkSync(filePath + oldImageName);
                   res.send({
                     status:true,
                     message: "Item was updated successfully."
@@ -301,13 +376,13 @@ exports.delete = (req, res) => {
                 });
               } else {
                 res.send({
-                  message: `Cannot delete item with id=${id}. Maybe item was not found!`
+                  message: `Cannot delete item. Maybe item was not found!`
                 });
               }
             })
             .catch(err => {
               res.status(500).send({
-                message: "Could not delete item with id=" + id
+                message: "Could not delete item"
               });
             });
 
@@ -356,4 +431,21 @@ function authorization(token) {
   } else {
     return false;
   }
+}
+
+//encrypt function
+function encrypt(text) {
+  //create cipher text
+  let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+  //encrypt cipher text
+  let encrypted = cipher.update(text);
+  encrypted = Buffer.concat([encrypted, cipher.final()]);
+  return encrypted.toString('hex');
+ }
+ 
+ //decrypt function
+ function decrypt(buffer){
+  var decipher = crypto.createDecipher('aes-256-cbc',Buffer.from(key),iv)
+  var dec = Buffer.concat([decipher.update(buffer) , decipher.final()]);
+  return dec;
 }

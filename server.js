@@ -19,7 +19,11 @@ var corsOptions = {
 // parse requests type of form-data
 
 app.use(fileUpload({
-    createParentPath: true
+    createParentPath: true,
+    limits: {
+        fileSize: 1000000 //1mb
+    },
+    abortOnLimit: true
 }));
 
 
