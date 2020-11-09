@@ -5,7 +5,7 @@ const secret = "S#2O2Opr0ductIT#Mm0duleAPIs"// secret key for token
 var fs = require('fs');//for unlink(delete) old image in folder
 
 
-//ADDNEW function
+//ADD NEW function
 exports.addNew = (req, res) => {
   const token = req.headers['token'];
   //check authorized is true or false
@@ -42,7 +42,7 @@ exports.addNew = (req, res) => {
       //generate for image name
       var date = new Date();
       var imageType = '';
-
+//set image type
       switch (product_image.mimetype) {
         case 'image/png':
           imageType = '.png'
@@ -126,6 +126,7 @@ exports.addNew = (req, res) => {
   }
 };
 
+//GET ALL Function
 exports.getAll = (req, res) => {
   const token = req.headers['token'];
 
@@ -172,7 +173,7 @@ exports.get = (req, res) => {
 
     if (method == "get" || method == "Get" || method == "GET") {
       const itemID = req.body.itemID;
-
+//check itemID is null or blank
       if (itemID == null || itemID == undefined || itemID == "" || itemID == " ") {
         res.status(500).send({
           message: "Fields cannot be empty.Check params."
@@ -355,6 +356,12 @@ exports.delete = (req, res) => {
     var method = req.body.type;
 
     if (method == "delete" || method == "Delete" || method == "DELETE") {
+var itemId=req.body.itemId;
+      if (itemID == null || itemID == undefined || itemID == "" || itemID == " ") {
+        res.status(500).send({
+          message: "Fields cannot be empty.Check params."
+        });
+      }
       //get image Name for delete
       itemsDB.findAll({ where: { itemID: req.body.itemID } })
         .then(data => {
