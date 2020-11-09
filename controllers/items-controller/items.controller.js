@@ -3,10 +3,6 @@ const itemsDB = model.services;
 const jwt = require("jsonwebtoken"); //for JWT.io
 const secret = "S#2O2Opr0ductIT#Mm0duleAPIs"// secret key for token
 var fs = require('fs');//for unlink(delete) old image in folder
-//for encrypt description
-const key = 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3';
-const Cryptr = require('cryptr');
-const cryptr = new Cryptr(key);
 
 
 //ADDNEW function
@@ -62,8 +58,8 @@ exports.addNew = (req, res) => {
           break;
       }
       var imageName = date.getDay() + "" + (date.getMonth() + 1) + "" + date.getFullYear() + "" + date.getHours() + "" + date.getMinutes() + "" + date.getSeconds() + "" + date.getMilliseconds() + 1 + imageType;
-      //for encrypt description
-      const encryptDes = cryptr.encrypt(req.body.description)
+      //for replace <> tags
+      const encryptDes = replaceTags(req.body.description)
 
 
       //getting request data
@@ -139,9 +135,9 @@ exports.getAll = (req, res) => {
     if (method == "get" || method == "Get" || method == "GET") {
       itemsDB.findAll()
         .then(data => {
-          //for decrypt description
+          //for set original description
           for (var i = 0; i < data.length; i++) {
-            data[i].description = cryptr.decrypt(data[i].description)
+            data[i].description = setOriginal(data[i].description)
 
           }
           res.send(data);
@@ -185,7 +181,7 @@ exports.get = (req, res) => {
       itemsDB.findOne({ where: { itemID: itemID } })
         .then(data => {
 
-          data.description = cryptr.decrypt(data.description);
+          data.description = setOriginal(data.description);
 
           res.send(data);
         })
@@ -222,8 +218,9 @@ exports.update = (req, res) => {
           message: "Fields cannot be empty.Check params."
         });
       }
-      //for encrypt description
-      const encryptDesc = cryptr.encrypt(req.body.description).toString();
+
+      //for replace <> tags
+      const encryptDesc = replaceTags(req.body.description);
 
       //not allow when product name is already have in database
       itemsDB.findAll({
@@ -435,5 +432,18 @@ function authorization(token) {
   } else {
     return false;
   }
+};
+
+function replaceTags(text){
+  var originalText=text.toString();
+  var replaceGT=originalText.replace(/>/g,"#%gt#");
+  var replaceLT=replaceGT.replace(/</g,"#%lt#");
+  return replaceLT
 }
 
+function setOriginal(text){
+  var replaceLT=text.toString();
+  var replaceGT=replaceLT.replace(/#%gt#/g,">");
+  var original=replaceGT.replace(/#%lt#/g,"<");
+  return original
+}
